@@ -3,6 +3,7 @@ import {NgModule} from '@angular/core';
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {TerminalModule} from './terminal/terminal.module';
+import {CommandsModule} from "./commands/commands.module";
 
 @NgModule({
   declarations: [
@@ -12,6 +13,7 @@ import {TerminalModule} from './terminal/terminal.module';
     BrowserModule,
     AppRoutingModule,
     TerminalModule,
+    CommandsModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
