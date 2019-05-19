@@ -4,6 +4,9 @@ import {TerminalComponent} from './terminal.component';
 
 @NgModule({
   declarations: [TerminalComponent],
+  exports: [
+    TerminalComponent
+  ],
   imports: [
     CommonModule
   ]
