@@ -1,6 +1,6 @@
 <div class="term">
   <div class="term-input" #termInput>
-    <span class="before">anon@plop ~ $</span><label>
+    <span class="before" #before>anon@plop ~ $</span><label>
     <input
       (keydown.enter)="submit(input.value)"
       [formControl]="input"

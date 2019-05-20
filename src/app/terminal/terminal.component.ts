@@ -1,7 +1,6 @@
-import {Component, ViewChild} from '@angular/core';
+import {Component, ElementRef, Renderer2, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {CommandsService} from '../commands/commands.service';
-import {Commands} from '../commands/commands.enum';
 
 @Component({
   selector: 'app-terminal',
@@ -9,19 +8,31 @@ import {Commands} from '../commands/commands.enum';
   styleUrls: ['./terminal.component.sass']
 })
 export class TerminalComponent {
-  public input: FormControl = new FormControl();
+  public input: FormControl = new FormControl('');
 
   @ViewChild('termInput')
-  public termInput: HTMLElement;
+  public termInput: ElementRef;
 
-  constructor(private commandsService: CommandsService) {
+  @ViewChild('before')
+  public before: ElementRef;
+
+  constructor(private commandsService: CommandsService, private renderer: Renderer2) {
+  }
+
+  public output(out: string): HTMLDivElement {
+    const output: HTMLDivElement = this.renderer.createElement('div');
+    output.setAttribute('class', 'term-history');
+    output.innerHTML = out;
+
+    return output;
   }
 
   public submit(command: string) {
     const cmd = command.split(' ');
-    const res = this.commandsService.getCmd(Commands[cmd[0].toUpperCase()], cmd.slice(1));
-    console.log(res);
-    // this.termInput.insertBefore(res, null);
+    this.termInput.nativeElement.before(this.output(`${this.before.nativeElement.outerHTML}${cmd.join(' ')}`));
+    this.termInput.nativeElement.before(this.output(this.commandsService.applyCmd(cmd[0], cmd.slice(1))()));
+    this.termInput.nativeElement.scrollIntoView();
+    this.termInput.nativeElement.focus();
     this.input.setValue('');
   }
 }

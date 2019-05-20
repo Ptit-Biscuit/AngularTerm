@@ -6,41 +6,42 @@ import {Commands} from './commands.enum';
   providedIn: CommandsModule
 })
 export class CommandsService {
-  public getCmd(cmd: Commands, args: string | string[]): string {
+  public applyCmd(cmd: string, args: string[]): () => any {
     console.log(cmd, args);
-    switch (cmd) {
+
+    switch (Commands[cmd.toUpperCase()]) {
       case Commands.CLEAR:
-        console.log('clear');
-        return `<div class="term-history">clear`;
+        return () => {
+        };
       case Commands.HISTORY:
-        console.log('history');
-        return ``;
+        return () => {
+        };
       case Commands.LOGIN:
-        console.log('login');
-        return ``;
+        return () => {
+        };
       case Commands.MODULES:
         switch (args[0]) {
           case Commands.MODULES_OPEN:
           case Commands.MODULES_ACTIVATE:
-            console.log('modules open / activate');
-            return ``;
+            return () => {
+            };
           case Commands.MODULES_LIST:
-            console.log('modules list');
-            return ``;
+            return () => {
+            };
           case Commands.MODULES_CLOSE:
           case Commands.MODULES_DEACTIVATE:
-            console.log('modules close / deactivate');
-            return ``;
+            return () => {
+            };
           default:
           case Commands.HELP:
-            console.log('modules help');
-            return ``;
+            return () => {
+            };
         }
         break;
       default:
       case Commands.HELP:
-        console.log('help');
-        return ``;
+        return () => {
+        };
     }
   }
 }
