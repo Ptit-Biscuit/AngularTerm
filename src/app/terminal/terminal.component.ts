@@ -1,7 +1,7 @@
-import {Component} from '@angular/core';
-import {FormControl} from "@angular/forms";
-import {CommandsService} from "../commands/commands.service";
-import {Commands} from "../commands/commands.enum";
+import {Component, ViewChild} from '@angular/core';
+import {FormControl} from '@angular/forms';
+import {CommandsService} from '../commands/commands.service';
+import {Commands} from '../commands/commands.enum';
 
 @Component({
   selector: 'app-terminal',
@@ -11,12 +11,17 @@ import {Commands} from "../commands/commands.enum";
 export class TerminalComponent {
   public input: FormControl = new FormControl();
 
+  @ViewChild('termInput')
+  public termInput: HTMLElement;
+
   constructor(private commandsService: CommandsService) {
   }
 
   public submit(command: string) {
     const cmd = command.split(' ');
-    this.commandsService.getCmd(Commands[cmd[0].toUpperCase()], cmd.slice(1))();
+    const res = this.commandsService.getCmd(Commands[cmd[0].toUpperCase()], cmd.slice(1));
+    console.log(res);
+    // this.termInput.insertBefore(res, null);
     this.input.setValue('');
   }
 }
