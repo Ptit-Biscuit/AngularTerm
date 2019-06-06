@@ -16,7 +16,7 @@ export class TerminalComponent {
   @ViewChild('before')
   public before: ElementRef;
 
-  constructor(private commandsService: CommandsService, private renderer: Renderer2) {
+  constructor(private renderer: Renderer2) {
   }
 
   public output(out: string): HTMLDivElement {
@@ -30,7 +30,7 @@ export class TerminalComponent {
   public submit(command: string) {
     const cmd = command.split(' ');
     this.termInput.nativeElement.before(this.output(`${this.before.nativeElement.outerHTML}${cmd.join(' ')}`));
-    this.termInput.nativeElement.before(this.output(this.commandsService.applyCmd(cmd[0], cmd.slice(1))()));
+    this.termInput.nativeElement.before(this.output(CommandsService.applyCmd(cmd[0], cmd.slice(1))()));
     this.termInput.nativeElement.scrollIntoView();
     this.termInput.nativeElement.focus();
     this.input.setValue('');

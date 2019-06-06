@@ -1,12 +1,11 @@
 import {Injectable} from '@angular/core';
-import {CommandsModule} from './commands.module';
 import {Commands} from './commands.enum';
 
 @Injectable({
-  providedIn: CommandsModule
+  providedIn: 'root'
 })
 export class CommandsService {
-  public applyCmd(cmd: string, args: string[]): () => any {
+  public static applyCmd(cmd: string, args: string[]): () => any {
     console.log(cmd, args);
 
     switch (Commands[cmd.toUpperCase()]) {
