@@ -1,8 +1,12 @@
 <div class="term">
+  <div *ngFor="let out of outputs">
+    <div class="term-history">{{out}}</div>
+  </div>
   <div class="term-input" #termInput>
-    <span class="before" #before>anon@plop ~ $</span><label>
+    <span class="before">{{userPath}}</span><label>
     <input
       (keydown.enter)="submit(input.value)"
+      (keydown)="inputHist($event)"
       [formControl]="input"
       autocomplete="off"
       autofocus
