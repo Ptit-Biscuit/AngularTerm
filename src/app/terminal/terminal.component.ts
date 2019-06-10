@@ -1,9 +1,11 @@
 import {Component, ElementRef, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {Commands} from '../commands/commands.enum';
-import {Module} from '../module/module';
-import {Download} from '../download/download';
-import {first} from 'rxjs/operators';
+import {ModuleComponent} from '../module/module.component';
+import {first, map} from 'rxjs/operators';
+import {Observable} from "rxjs";
+import {LoadComponent} from "../component-loader/load-component";
+import {DownloadComponent} from "../download/download.component";
 
 @Component({
   selector: 'app-terminal',
@@ -11,31 +13,36 @@ import {first} from 'rxjs/operators';
   styleUrls: ['./terminal.component.sass']
 })
 export class TerminalComponent {
-  public userPath = 'anon@plop ~ $';
+  public userPath = '~';
   public input: FormControl = new FormControl('');
-  public history: string[] = [];
+  public history: string[] = ['modules open Login'];
   public histIndex: number;
   public outputs: any[] = [];
   @ViewChild('termInput')
   public termInput: ElementRef;
-  public modules: Module[] = [
-    new Module(
-      'Login',
-      '/login',
-      [
-        new Download('Login core', '0.56 (beta)'),
-        new Download('Watchdog', '4.75'),
-        new Download('Form database', '3.1.42')
-      ],
-      'help for module <i>Login</i>'
-    )
-  ];
-  public activeModule: Module = null;
+  public modules: LoadComponent<ModuleComponent>[] = [];
+  public activeModule: LoadComponent<ModuleComponent> = null;
+
+  constructor() {
+    this.modules.push(
+      new LoadComponent(
+        ModuleComponent,
+        {
+          name: 'Login',
+          path: '~/login',
+          downloads: [
+            new LoadComponent(DownloadComponent, {name: 'Login core', version: '0.56 (beta)'}),
+            new LoadComponent(DownloadComponent, {name: 'Watchdog', version: '4.75'}),
+            new LoadComponent(DownloadComponent, {name: 'Form database', version: '3.1.42'})
+          ],
+          help: 'help for module <i>Login</i>'
+        }));
+  }
 
   public submit(command: string) {
     const cmd = command.split(' ');
     this.history.push(command);
-    this.outputs.push(this.userPath.concat(' ' + command));
+    this.outputs.push(`anon@plop ${this.userPath} $ ${command}`);
     this.applyCmd(cmd[0], cmd.slice(1));
 
     this.termInput.nativeElement.scrollIntoView();
@@ -85,27 +92,23 @@ export class TerminalComponent {
             const module = args[1] as string;
 
             if (!module) {
-              this.outputs.push('Module name is required');
+              this.outputs.push('ModuleComponent name is required');
               break;
             }
 
-            if (this.modules.map(m => m.name).includes(module)) {
-              const mod = this.modules.find(m => m.name === module);
-              /*mod.install().pipe(first()).subscribe(() => {
-                this.outputs.push(`Downloads complete. Module '${mod.name}' successfully installed`);
-                this.activeModule = mod;
-              });*/
-              this.activeModule = mod;
+            if (this.modules.map(m => m.data.name).includes(module)) {
+              this.startModuleInstall(this.modules.find(m => m.data.name === module));
             } else {
               this.outputs.push(`Module '${module}' cannot be found`);
             }
             break;
           case Commands.MODULES_LIST:
-            this.modules.forEach(mod => this.outputs.push(mod.name));
+            this.modules.forEach(mod => this.outputs.push(mod.data.name));
             break;
           case Commands.MODULES_CLOSE:
           case Commands.MODULES_DEACTIVATE:
             this.activeModule = null;
+            this.userPath = '~';
             break;
           default:
           case Commands.HELP:
@@ -118,5 +121,16 @@ export class TerminalComponent {
         this.outputs.push('blabla');
         break;
     }
+  }
+
+  public startModuleInstall(module: LoadComponent<ModuleComponent>): Observable<any> {
+    return module.install().pipe(
+      first(),
+      map(() => {
+        this.outputs.push(`Downloads complete. Module '${module.data.name}' successfully installed`);
+        this.activeModule = module;
+        this.userPath = module.data.path;
+      })
+    );
   }
 }

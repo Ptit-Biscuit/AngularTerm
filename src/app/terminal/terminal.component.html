@@ -3,7 +3,7 @@
     <div class="term-history">{{out}}</div>
   </div>
   <div class="term-input" #termInput>
-    <span class="before">{{userPath}}</span><label>
+    <span class="before">anon@plop {{userPath}} $</span><label>
     <input
       (keydown.enter)="submit(input.value)"
       (keydown)="inputHist($event)"
