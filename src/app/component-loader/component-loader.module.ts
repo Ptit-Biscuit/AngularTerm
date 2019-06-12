@@ -1,13 +1,19 @@
 import {NgModule} from '@angular/core';
-import {ComponentLoaderDirective} from "./component-loader.directive";
+import {Loader} from "./loader.directive";
+import {ModuleComponent} from "../module/module.component";
+import {DownloadComponent} from "../download/download.component";
 
 @NgModule({
   declarations: [
-    ComponentLoaderDirective,
+    Loader,
   ],
   exports: [
-    ComponentLoaderDirective,
-  ]
+    Loader,
+  ],
+  entryComponents: [
+    DownloadComponent,
+    ModuleComponent,
+  ],
 })
 export class ComponentLoaderModule {
 }

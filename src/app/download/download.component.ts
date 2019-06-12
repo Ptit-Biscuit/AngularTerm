@@ -1,26 +1,28 @@
-import {Component, Input} from '@angular/core';
+import {Component} from '@angular/core';
 import {Observable, of, timer} from "rxjs";
 import {map, takeWhile} from "rxjs/operators";
-import {LoadComponentData} from "../component-loader/load-component-data.interface";
-
-export interface DownloadComponentData {
-  name: string;
-  version: string;
-}
+import {LoadedComponent} from "../component-loader/loaded-component";
+import {DownloadData} from "./download-data.interface";
 
 @Component({
   selector: 'app-download',
   templateUrl: './download.component.html',
   styleUrls: ['./download.component.sass']
 })
-export class DownloadComponent implements LoadComponentData {
-  @Input()
-  public data: DownloadComponentData;
-  public speed: number;
-  public percent = 0;
+export class DownloadComponent extends LoadedComponent {
+  public name: string;
+  public version: string;
+  readonly speed: number;
+  private percent = 0;
 
   constructor() {
+    super();
     this.speed += 100 * (1 + Math.random());
+  }
+
+  public apply(data: DownloadData): void {
+    this.name = data.name;
+    this.version = data.version;
   }
 
   /** Completeness of download */

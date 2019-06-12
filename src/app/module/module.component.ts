@@ -1,41 +1,44 @@
-import {Component, ComponentFactoryResolver, Input, ViewChild} from "@angular/core";
-import {ComponentLoaderDirective} from "../component-loader/component-loader.directive";
+import {Component, ViewChild} from "@angular/core";
 import {first} from "rxjs/operators";
 import {Observable, of} from "rxjs";
-import {LoadComponentData} from "../component-loader/load-component-data.interface";
 import {DownloadComponent} from "../download/download.component";
-
-export interface ModuleComponentData {
-  name: string;
-  path: string;
-  downloads: DownloadComponent[];
-  help: string;
-}
+import {LoadedComponent} from "../component-loader/loaded-component";
+import {ComponentLoaderService} from "../component-loader/component-loader.service";
+import {Loader} from "../component-loader/loader.directive";
+import {ModuleData} from "./module-data.interface";
+import {DownloadData} from "../download/download-data.interface";
 
 @Component({
   selector: 'app-module',
   templateUrl: './module.component.html',
   styleUrls: ['./module.component.sass']
 })
-export class ModuleComponent implements LoadComponentData {
-  @ViewChild(ComponentLoaderDirective)
-  public container: ComponentLoaderDirective;
-
-  @Input()
-  public data: ModuleComponentData;
-
+export class ModuleComponent extends LoadedComponent {
+  public name: string;
+  public path: string;
+  public downloads: DownloadData[];
+  public help: string;
   public installed = false;
 
-  constructor(private componentFactoryResolver: ComponentFactoryResolver) {
+  @ViewChild('loader')
+  private loader: Loader;
+
+  constructor(private cls: ComponentLoaderService) {
+    super();
+  }
+
+  public apply(data: ModuleData): void {
+    this.name = data.name;
+    this.path = data.path;
+    this.downloads = data.downloads;
+    this.help = data.help;
   }
 
   /** Install process for module */
   public install(): Observable<boolean> {
     if (!this.installed) {
-      this.data.downloads.forEach(dl => {
-          const component = this.container.viewContainerRef.createComponent(this.componentFactoryResolver.resolveComponentFactory(DownloadComponent)).instance;
-          component.data = dl.data;
-
+      this.downloads.forEach(dl => {
+          const component = this.cls.loadComponent(this.loader, DownloadComponent, dl) as DownloadComponent;
           component.complete().pipe(first()).subscribe(() => {
             console.log('complete');
           });

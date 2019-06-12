@@ -2,6 +2,7 @@
   <div *ngFor="let out of outputs">
     <div class="term-history">{{out}}</div>
   </div>
+  <ng-container loader></ng-container>
   <div class="term-input" #termInput>
     <span class="before">anon@plop {{userPath}} $</span><label>
     <input

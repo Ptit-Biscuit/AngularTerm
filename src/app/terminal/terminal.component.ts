@@ -1,11 +1,12 @@
-import {Component, ElementRef, ViewChild} from '@angular/core';
+import {Component, ElementRef, ViewChild, ViewChildren} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {Commands} from '../commands/commands.enum';
 import {ModuleComponent} from '../module/module.component';
 import {first, map} from 'rxjs/operators';
 import {Observable} from "rxjs";
-import {LoadComponent} from "../component-loader/load-component";
-import {DownloadComponent} from "../download/download.component";
+import {ComponentLoaderService} from "../component-loader/component-loader.service";
+import {Loader} from "../component-loader/loader.directive";
+import {ModuleData} from "../module/module-data.interface";
 
 @Component({
   selector: 'app-terminal',
@@ -20,23 +21,22 @@ export class TerminalComponent {
   public outputs: any[] = [];
   @ViewChild('termInput')
   public termInput: ElementRef;
-  public modules: LoadComponent<ModuleComponent>[] = [];
-  public activeModule: LoadComponent<ModuleComponent> = null;
+  public modules: ModuleData[] = [];
+  public activeModule: ModuleComponent = null;
+  @ViewChildren(Loader)
+  public loader: Loader;
 
-  constructor() {
-    this.modules.push(
-      new LoadComponent(
-        ModuleComponent,
-        {
-          name: 'Login',
-          path: '~/login',
-          downloads: [
-            new LoadComponent(DownloadComponent, {name: 'Login core', version: '0.56 (beta)'}),
-            new LoadComponent(DownloadComponent, {name: 'Watchdog', version: '4.75'}),
-            new LoadComponent(DownloadComponent, {name: 'Form database', version: '3.1.42'})
-          ],
-          help: 'help for module <i>Login</i>'
-        }));
+  constructor(private cls: ComponentLoaderService) {
+    this.modules.push({
+      name: 'Login',
+      path: '~/login',
+      downloads: [
+        {name: 'Login core', version: '0.56 (beta)'},
+        {name: 'Watchdog', version: '4.75'},
+        {name: 'Form database', version: '3.1.42'},
+      ],
+      help: 'help for module <i>Login</i>'
+    });
   }
 
   public submit(command: string) {
@@ -96,14 +96,14 @@ export class TerminalComponent {
               break;
             }
 
-            if (this.modules.map(m => m.data.name).includes(module)) {
-              this.startModuleInstall(this.modules.find(m => m.data.name === module));
+            if (this.modules.map(m => m.name).includes(module)) {
+              this.startModuleInstall(this.modules.find(m => m.name === module));
             } else {
               this.outputs.push(`Module '${module}' cannot be found`);
             }
             break;
           case Commands.MODULES_LIST:
-            this.modules.forEach(mod => this.outputs.push(mod.data.name));
+            this.modules.forEach(mod => this.outputs.push(mod.name));
             break;
           case Commands.MODULES_CLOSE:
           case Commands.MODULES_DEACTIVATE:
@@ -123,13 +123,15 @@ export class TerminalComponent {
     }
   }
 
-  public startModuleInstall(module: LoadComponent<ModuleComponent>): Observable<any> {
+  public startModuleInstall(moduleData: ModuleData): Observable<any> {
+    const module = this.cls.loadComponent(this.loader, ModuleComponent, moduleData) as ModuleComponent;
+
     return module.install().pipe(
       first(),
       map(() => {
-        this.outputs.push(`Downloads complete. Module '${module.data.name}' successfully installed`);
+        this.outputs.push(`Downloads complete. Module '${module.name}' successfully installed`);
         this.activeModule = module;
-        this.userPath = module.data.path;
+        this.userPath = module.path;
       })
     );
   }
