@@ -2,7 +2,14 @@
   <div *ngFor="let out of outputs">
     <div class="term-history">{{out}}</div>
   </div>
-  <ng-container loader></ng-container>
+  <ng-template *ngIf="mod && (startModuleInstall(mod) | async)">
+    <ng-container *ngFor="let download of mod.downloads">
+      <div class="term-history download">
+        <div>{{download.name}} {{download.version}}</div>
+        <div class="download-progress">{{download.update() | async}}</div>
+      </div>
+    </ng-container>
+  </ng-template>
   <div class="term-input" #termInput>
     <span class="before">anon@plop {{userPath}} $</span><label>
     <input

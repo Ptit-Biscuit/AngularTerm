@@ -1,12 +1,10 @@
-import {Component, ElementRef, ViewChild, ViewChildren} from '@angular/core';
+import {Component, ElementRef, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {Commands} from '../commands/commands.enum';
 import {ModuleComponent} from '../module/module.component';
 import {first, map} from 'rxjs/operators';
-import {Observable} from "rxjs";
-import {ComponentLoaderService} from "../component-loader/component-loader.service";
-import {Loader} from "../component-loader/loader.directive";
-import {ModuleData} from "../module/module-data.interface";
+import {Observable} from 'rxjs';
+import {DownloadComponent} from '../download/download.component';
 
 @Component({
   selector: 'app-terminal',
@@ -21,22 +19,23 @@ export class TerminalComponent {
   public outputs: any[] = [];
   @ViewChild('termInput')
   public termInput: ElementRef;
-  public modules: ModuleData[] = [];
+  public modules: ModuleComponent[] = [];
   public activeModule: ModuleComponent = null;
-  @ViewChildren(Loader)
-  public loader: Loader;
+  public mod: ModuleComponent;
 
-  constructor(private cls: ComponentLoaderService) {
-    this.modules.push({
-      name: 'Login',
-      path: '~/login',
-      downloads: [
-        {name: 'Login core', version: '0.56 (beta)'},
-        {name: 'Watchdog', version: '4.75'},
-        {name: 'Form database', version: '3.1.42'},
-      ],
-      help: 'help for module <i>Login</i>'
-    });
+  constructor() {
+    this.modules.push(
+      new ModuleComponent(
+        'Login',
+        '~/login',
+        [
+          new DownloadComponent('Login core', '0.56 (beta)'),
+          new DownloadComponent('Watchdog', '4.75'),
+          new DownloadComponent('Form database', '3.1.42'),
+        ],
+        'help for module <i>Login</i>'
+      )
+    );
   }
 
   public submit(command: string) {
@@ -75,7 +74,7 @@ export class TerminalComponent {
   public applyCmd(cmd: string, args: string[]): void {
     console.log(cmd, args);
 
-    switch (Commands[cmd.toUpperCase()]) {
+    switch (cmd) {
       case Commands.CLEAR:
         this.outputs = [];
         break;
@@ -92,12 +91,12 @@ export class TerminalComponent {
             const module = args[1] as string;
 
             if (!module) {
-              this.outputs.push('ModuleComponent name is required');
+              this.outputs.push('Module name is required');
               break;
             }
 
             if (this.modules.map(m => m.name).includes(module)) {
-              this.startModuleInstall(this.modules.find(m => m.name === module));
+              this.mod = this.modules.find(m => m.name === module);
             } else {
               this.outputs.push(`Module '${module}' cannot be found`);
             }
@@ -123,9 +122,7 @@ export class TerminalComponent {
     }
   }
 
-  public startModuleInstall(moduleData: ModuleData): Observable<any> {
-    const module = this.cls.loadComponent(this.loader, ModuleComponent, moduleData) as ModuleComponent;
-
+  public startModuleInstall(module: ModuleComponent): Observable<any> {
     return module.install().pipe(
       first(),
       map(() => {
