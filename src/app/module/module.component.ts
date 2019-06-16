@@ -1,24 +1,22 @@
-import {filter, first} from 'rxjs/operators';
-import {Observable, of} from 'rxjs';
-import {DownloadComponent} from '../download/download.component';
+import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {Module} from "./module";
 
+@Component({
+  selector: 'app-module',
+  templateUrl: './module.component.html',
+  styleUrls: ['./module.component.sass'],
+})
 export class ModuleComponent {
-  public installed = false;
+  @Input()
+  public module: Module;
 
-  constructor(public name: string, public path: string, public downloads: DownloadComponent[], public help: string) {
-  }
+  @Output()
+  public installed = new EventEmitter<boolean>();
 
-  /** Install process for module */
-  public install(): Observable<boolean> {
-    if (!this.installed) {
-      this.downloads.forEach(dl => {
-          dl.complete().pipe(filter(complete => complete), first()).subscribe(() => {
-            console.log('complete');
-          });
-        }
-      );
-    }
+  private allComplete = 0;
 
-    return of(true);
+  /** Install progress for module */
+  public installProgress(event: boolean): void {
+    this.installed.emit((this.allComplete += event ? 1 : 0) === this.module.downloads.length);
   }
 }

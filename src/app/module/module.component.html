@@ -1,0 +1,3 @@
+<ng-container *ngFor="let download of module.downloads">
+  <app-download class="download" [download]="download" (complete)="installProgress($event)"></app-download>
+</ng-container>

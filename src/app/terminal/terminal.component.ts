@@ -1,15 +1,13 @@
 import {Component, ElementRef, ViewChild} from '@angular/core';
 import {FormControl} from '@angular/forms';
 import {Commands} from '../commands/commands.enum';
-import {ModuleComponent} from '../module/module.component';
-import {first, map} from 'rxjs/operators';
-import {Observable} from 'rxjs';
-import {DownloadComponent} from '../download/download.component';
+import {Module} from '../module/module';
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: 'app-terminal',
   templateUrl: './terminal.component.html',
-  styleUrls: ['./terminal.component.sass']
+  styleUrls: ['./terminal.component.sass'],
 })
 export class TerminalComponent {
   public userPath = '~';
@@ -19,23 +17,23 @@ export class TerminalComponent {
   public outputs: any[] = [];
   @ViewChild('termInput')
   public termInput: ElementRef;
-  public modules: ModuleComponent[] = [];
-  public activeModule: ModuleComponent = null;
-  public mod: ModuleComponent;
+  public modules: Module[] = [];
+  public activeModule: Module = null;
+  public module: Module = null;
+  public installModule = false;
 
-  constructor() {
+  constructor(private sanitizer: DomSanitizer) {
     this.modules.push(
-      new ModuleComponent(
-        'Login',
-        '~/login',
-        [
-          new DownloadComponent('Login core', '0.56 (beta)'),
-          new DownloadComponent('Watchdog', '4.75'),
-          new DownloadComponent('Form database', '3.1.42'),
+      {
+        name: 'Login',
+        path: '~/login',
+        downloads: [
+          {name: 'Login core', version: '0.56 (beta)'},
+          {name: 'Watchdog', version: '4.75'},
+          {name: 'Form database', version: '3.1.42'},
         ],
-        'help for module <i>Login</i>'
-      )
-    );
+        help: 'help for module <i>Login</i>',
+      });
   }
 
   public submit(command: string) {
@@ -96,7 +94,8 @@ export class TerminalComponent {
             }
 
             if (this.modules.map(m => m.name).includes(module)) {
-              this.mod = this.modules.find(m => m.name === module);
+              this.module = this.modules.find(m => m.name === module);
+              this.installModule = true;
             } else {
               this.outputs.push(`Module '${module}' cannot be found`);
             }
@@ -111,25 +110,23 @@ export class TerminalComponent {
             break;
           default:
           case Commands.HELP:
-            this.outputs.push('blabla');
+            this.outputs.push(this.sanitizer.bypassSecurityTrustHtml(this.activeModule.help));
             break;
         }
         break;
       default:
       case Commands.HELP:
-        this.outputs.push('blabla');
+        this.outputs.push('default help');
         break;
     }
   }
 
-  public startModuleInstall(module: ModuleComponent): Observable<any> {
-    return module.install().pipe(
-      first(),
-      map(() => {
-        this.outputs.push(`Downloads complete. Module '${module.name}' successfully installed`);
-        this.activeModule = module;
-        this.userPath = module.path;
-      })
-    );
+  public installComplete(complete: boolean): void {
+    if (complete) {
+      this.outputs.push(`Downloads complete. Module '${this.module.name}' successfully installed`);
+      this.activeModule = this.module;
+      this.userPath = this.module.path;
+      this.installModule = false;
+    }
   }
 }
